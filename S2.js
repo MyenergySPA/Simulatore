@@ -557,14 +557,26 @@ if (step2NextBtn && currentArea >= 16) {
 function updateAreaValue(newValue) {
     // Ensure we don't go below 0
     currentArea = Math.max(0, newValue);
-    
+
     // Update display and localStorage
     if (areaValue) areaValue.textContent = currentArea;
     localStorage.setItem('area', currentArea.toString());
-    
+
     // Show/hide proceed button based on value
     if (step2NextBtn) {
         step2NextBtn.style.display = currentArea >= 16 ? 'block' : 'none';
+    }
+}
+
+// Ensure area value from inline input is saved before leaving Step 2
+function finalizeAreaInput() {
+    const span = document.getElementById('step-box-area-value');
+    if (!span) return;
+    const input = span.querySelector('input');
+    if (input) {
+        const newValue = parseInt(input.value) || 0;
+        span.textContent = newValue;
+        updateAreaValue(newValue);
     }
 }
 
@@ -1151,7 +1163,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (redoBtn) redoBtn.addEventListener('click', redrawPolygon);
     if (step1NextBtn) step1NextBtn.addEventListener('click', goToStep2);
-    if (step2NextBtn) step2NextBtn.addEventListener('click', goToStep3);
+    if (step2NextBtn) step2NextBtn.addEventListener('click', function() {
+        finalizeAreaInput();
+        goToStep3();
+    });
     if (step3NextBtn) step3NextBtn.addEventListener('click', goToStep4);
     if (step4NextButton) {
         step4NextButton.addEventListener('click', function() {
