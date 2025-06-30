@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulatore Fotovoltaico - MyEnergy</title>
+    <link rel="stylesheet" href="S2.css">
+    
+    <!-- Define the callback function BEFORE loading Google Maps API -->
+    <script>
+        // Define a global callback function that Google Maps will call when ready
+        window.initMapCallback = function() {
+            console.log("Google Maps API loaded successfully");
+            if (typeof initMap === 'function') {
+            initMap();
+            }
+        };
+        // Define the callback function that Google Maps API will call
+
+        function initMapCallback() {
+            console.log("Google Maps API loaded successfully");
+
+            if (typeof initAutocomplete === 'function') {
+                initAutocomplete();
+            }
+
+            // Se c'è già un indirizzo salvato, inizializza la mappa subito
+            const lat = parseFloat(localStorage.getItem("latitude"));
+            const lng = parseFloat(localStorage.getItem("longitude"));
+
+            if (!isNaN(lat) && !isNaN(lng) && typeof initializeMap === 'function') {
+                console.log("Calling initializeMap from callback...");
+                initializeMap(lat, lng);
+            }
+        }
+    </script>
+    
+    <!-- Load Google Maps API with the callback parameter -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCBWaYSaDUQDQ_muGXLgW6Zo22Oc_M3asA&libraries=places,drawing,geometry&callback=initMapCallback" async defer></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Load our main script with defer to ensure DOM is ready -->
+    <script src="S2.js" defer></script>
+
+    
+
+
+<style>
+  #map { 
+    width: 100%; 
+    height: 500px; }
+
+</style>
+</head>
+<body>
+
+<!-- Add the error message container after the body opening tag -->
+<div id="address-error-container" class="error-message-container">
+    <div class="error-message">
+        <span class="error-icon">!</span>
+        <p>Seleziona un'indirizzo valido.</p>
+        <button class="error-close">&times;</button>
+    </div>
+</div>
+
+<!-- Step 1 - Configura il tuo impianto (dummy.html) -->
+<section id="section-step1" class="section-step">
+    <div class="container-1">
+        <div class="left-panel-1">
+            <img src="logo2.png" alt="MyEnergy Solutions Logo" class="logo" />
+            <div class="form-box">
+                <p class="step">PASSO 1</p>
+                <h1>Configura il tuo impianto fotovoltaico</h1>
+                
+                <label for="address">Dove vuoi installare l'impianto?</label>
+                <input type="text" id="address" placeholder="Inserisci indirizzo" />
+                <button class="proceed" id="step1Next" style="display: none;">Procedi</button>
+            </div>
+            <p class="privacy">
+                I tuoi dati personali sono protetti come da GDPR. Per ulteriori informazioni sul trattamento dei dati personali visita la nostra <a href="#">Privacy Policy</a>.
+            </p>
+        </div>
+        <div class="right-panel-1">
+            <img src="https://www.myenergy.store/wp-content/uploads/2025/02/RWKA-Clifden-House-D233-Ryan-W.-Kennihan-Architects-Topophile-1280x1812-1-e1740745088633.jpg" alt="Immagine impianto" class="side-image" />
+        </div>
+    </div>
+</section>
+
+<!-- Step 2 - Disegna la tua superficie -->
+<section id="section-step2" class="section-step">
+    <div class="container-2">
+      <!-- Left panel with map -->
+      <div class="left-panel-2">
+  
+        <!-- Full-width map container -->
+        <div id="map-container">
+          <div id="map"></div>
+  
+          <!-- Map overlay with button -->
+          <div id="mapOverlay">
+            <button id="startDesign" class="btn-primary">Disegna</button>
+          </div>
+  
+          <!-- Map controls -->
+          <div class="map-controls">
+            <button id="redoButton" style="display: none;">Ridisegna</button>
+            <div id="area" style="display: none;">Area totale: <span id="areaValue">0</span> m²</div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Right panel -->
+      <div class="right-panel-2">
+        <img src="logo2.png" alt="MyEnergy Solutions Logo" class="logo" />
+        <div class="form-box">
+          <p class="step">PASSO 2</p>
+          <h2>Disegna l'area del tuo impianto</h2>
+          <p class="description">
+            Seleziona l'area sul tetto dove posizioneremo i pannelli solari.
+            Questo ci aiuterà a calcolare la superficie disponibile e a configurare il tuo impianto ottimale.
+          </p>
+  
+          <!-- Selected area info -->
+          <div class="area-info-box">
+            <p>Indirizzo selezionato: <br><strong id="selected-address">--</strong></p>
+            <p class="area-edit-container" style="margin-top: 15px;">
+                Area selezionata: 
+                <strong>
+                    <div id="areaContainer" class="area-container">
+                    <strong>
+                        <button id="decreaseArea" class="area-button">-</button>
+                        <span id="step-box-area-value" class="area-value" tabindex="0">16</span> m²
+                        <button id="increaseArea" class="area-button">+</button>
+                    </strong>
+                </div>
+                </strong>
+            </p>
+          </div>
+        </div>
+  
+        <!-- Drawing help section -->
+        <div class="drawing-help">
+          <div class="help-text">Come disegnare l'area:</div>
+          <ol>
+            <li>Clicca su "Disegna" per iniziare</li>
+            <li>Fai clic sulla mappa per aggiungere punti</li>
+            <li>Completa il poligono facendo clic sul primo punto</li>
+            <li>Puoi modificare la forma trascinando i punti</li>
+          </ol>
+        </div>
+        
+        <!-- Next button - below drawing help -->
+        <div class="button-container">
+          <button id="step2Next" style="display: none;" class="proceed-button">Procedi</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<!-- Step 3 - Configura il tuo impianto (dummy3.html) -->
+<section id="section-step3" class="section-step">
+    <div class="container-3">
+        <div class="left-panel-3">
+            <img src="logo2.png" alt="Myenergy Logo" style="max-width: 200px; margin-bottom: 2rem;">
+            <div class="form-box-3">
+                <p>PASSO 3</p>
+                <h2>Configura il tuo impianto</h2>
+
+                <div class="section">
+                    <label>Quanto spendi in media al mese di energia elettrica?</label>
+                    <div class="range-container-3">
+                        <input type="range" min="20" max="600" step="10" value="20" id="consumoSlider">
+                        <span id="rangeValue">20 €</span>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <label>Prevalenza consumo</label>
+                    <div class="btn-group" id="prevalenzaValue">
+                        <button class="btn-toggle" onclick="selectToggle(this, 'prevalenzaValue')">
+                            <svg width="15" height="16" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M7.5 1.625V2.33333M7.5 13.6667V14.375M1.83333 8H1.125M3.4725 3.9725L2.89583 3.39583M11.5275 3.9725L12.1042 3.39583M3.4725 12.0304L2.89583 12.6042M11.5275 12.0304L12.1042 12.6042M13.875 8H13.1667M10.3333 8C10.3333 9.56478 9.06478 10.8333 7.5 10.8333C5.93519 10.8333 4.66667 9.56478 4.66667 8C4.66667 6.43519 5.93519 5.16667 7.5 5.16667C9.06478 5.16667 10.3333 6.43519 10.3333 8Z" stroke="#112B3F" stroke-width="1.41667" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                            Giorno
+                        </button>
+                        <button class="btn-toggle" onclick="selectToggle(this, 'prevalenzaValue')">
+                            <svg width="15" height="16" viewBox="0 0 17 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M8.5 1V1.69231M2.72222 7.23077H2M4.39353 3.29439L3.80556 2.73077M12.6065 3.29439L13.1944 2.73077M15 7.23077H14.2778M11.3889 7.23077C11.3889 8.76015 10.0955 10 8.5 10C6.90451 10 5.61111 8.76015 5.61111 7.23077C5.61111 5.70136 6.90451 4.46154 8.5 4.46154C10.0955 4.46154 11.3889 5.70136 11.3889 7.23077Z" stroke="#112B3F" stroke-width="1.41667" stroke-linecap="round" stroke-linejoin="round"></path>
+                                <path d="M1 10L16 10" stroke="#112B3F" stroke-width="1.42" stroke-linecap="round"></path>
+                            </svg>
+                            Equilibrato
+                        </button>
+                        <button class="btn-toggle" onclick="selectToggle(this, 'prevalenzaValue')">
+                            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+                            Notte
+                        </button>
+                    </div>
+                </div>
+
+                <div class="tipologia-abitazione">
+                    <table class="tipologia-table">
+                        <tbody>
+                            <tr>
+                                <!-- Colonna 1: Titolo -->
+                                <td class="tipologia-title">
+                                    <b>Tipologia di Abitazione:</b>
+                                </td>
+                                <!-- Colonna 2: Prima Casa -->
+                                <td>
+                                    <div class="detrazione-option">
+                                        <input id="primo-casa" name="detrazione" type="radio" value="primo">
+                                        <label for="primo-casa">
+                                            <span class="custom-checkbox">
+                                                <span class="fill"></span>
+                                            </span>
+                                            <span class="option-text">Prima Casa</span>
+                                        </label>
+                                        <span class="question-button">?</span>
+                                        <span class="tooltip">
+                                            Se l'abitazione è la tua residenza principale, puoi accedere agli <b>incentivi del 50%</b> per l'installazione di impianti fotovoltaici.
+                                        </span>
+                                    </div>
+                                </td>
+                                <!-- Colonna 3: Seconda Casa -->
+                                <td>
+                                    <div class="detrazione-option">
+                                        <input id="seconda-casa" name="detrazione" type="radio" value="seconda">
+                                        <label for="seconda-casa">
+                                            <span class="custom-checkbox">
+                                                <span class="fill"></span>
+                                            </span>
+                                            <span class="option-text">Seconda Casa</span>
+                                        </label>
+                                        <span class="question-button">?</span>
+                                        <span class="tooltip">
+                                            Se l'abitazione è una seconda casa, puoi usufruire dell'<b>incentivo del 36%</b> per proprietà non destinate a residenza principale.
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+
+                <div class="section">
+                    <label>Tipo di superficie</label>
+                    <div class="btn-group" id="group2">
+                        <button class="btn-toggle" onclick="selectToggle(this, 'group2')">
+                            <svg width="27" height="24" viewBox="0 0 27 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M6.00171 3.91016L5.97488 8.64023" stroke="#BCBCBC" stroke-width="1.42" stroke-miterlimit="10" stroke-linecap="round"></path>
+                                <path d="M4.88965 1.5L21.4551 8.99287" stroke="#112B3F" stroke-width="1.42" stroke-miterlimit="10" stroke-linecap="round"></path>
+                                <path d="M24.4427 8.98242H2.02217C1.45764 8.98242 1 9.49069 1 10.1177V21.5658C1 22.1928 1.45764 22.7011 2.02217 22.7011H24.4427C25.0072 22.7011 25.4648 22.1928 25.4648 21.5658V10.1177C25.4648 9.49069 25.0072 8.98242 24.4427 8.98242Z" stroke="#BCBCBC" stroke-width="1.42" stroke-miterlimit="10"></path>
+                            </svg>
+                            Tetto Piano
+                        </button>
+                        <button class="btn-toggle" onclick="selectToggle(this, 'group2')">
+                            <svg width="27" height="24" viewBox="0 0 27 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M6.00171 3.91016L5.97488 8.64023" stroke="#BCBCBC" stroke-width="1.42" stroke-miterlimit="10" stroke-linecap="round"></path>
+                                <path d="M4.88965 1.5L21.4551 8.99287" stroke="#112B3F" stroke-width="1.42" stroke-miterlimit="10" stroke-linecap="round"></path>
+                                <path d="M24.4427 8.98242H2.02217C1.45764 8.98242 1 9.49069 1 10.1177V21.5658C1 22.1928 1.45764 22.7011 2.02217 22.7011H24.4427C25.0072 22.7011 25.4648 22.1928 25.4648 21.5658V10.1177C25.4648 9.49069 25.0072 8.98242 24.4427 8.98242Z" stroke="#BCBCBC" stroke-width="1.42" stroke-miterlimit="10"></path>
+                            </svg>
+                            Tetto a Falda
+                        </button>
+                        <button class="btn-toggle" onclick="selectToggle(this, 'group2')">
+                            <svg width="27" height="24" viewBox="0 0 41 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M0.709473 19.249H40" stroke="#BCBCBC" stroke-width="1.42" stroke-miterlimit="10" stroke-linecap="round"></path>
+                                <path d="M9.43433 19.2498V7.37472M18.0264 6.08276L13.141 11.8679C12.8645 12.1953 12.7599 12.6346 12.8592 13.0514L14.3354 19.2498" stroke="#BCBCBC" stroke-width="1.42" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"></path>
+                                <path d="M1 5.48877L8.48087 4.4561L35.3105 0.75" stroke="#112B3F" stroke-width="1.42" stroke-miterlimit="10" stroke-linecap="round"></path>
+                            </svg>
+                            Pensilina
+                        </button>
+                        <button class="btn-toggle" onclick="selectToggle(this, 'group2')">
+                            <svg width="27" height="24" viewBox="0 0 40 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M8.29926 7.35575L8.29634 24.4467M30.5246 18.318L30.5236 24.436" stroke="#BCBCBC" stroke-width="1.42" stroke-miterlimit="10" stroke-linecap="round"></path>
+                                <path d="M1.0376 1.5L38.4679 18.647" stroke="#112B3F" stroke-width="1.42" stroke-miterlimit="10" stroke-linecap="round"></path>
+                                <path d="M4.90894 24.5005L34.4831 24.5005" stroke="#BCBCBC" stroke-width="1.42" stroke-miterlimit="10" stroke-linecap="round"></path>
+                            </svg>
+                            Terreno
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Replace the existing checkbox group with this updated version -->
+                <div class="section">
+                    <label>Opzioni di Efficientamento Energetico:</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-option">
+                            <input type="checkbox" id="pompa-di-calore" name="efficiency-options" onchange="highlightCheckbox(this)">
+                            <span>Pompa di Calore</span>
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" id="infissi" name="efficiency-options" onchange="highlightCheckbox(this)">
+                            <span>Infissi</span>
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" id="climatizzazione" name="efficiency-options" onchange="highlightCheckbox(this)">
+                            <span>Climatizzazione</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- COD_AC Value Display -->
+                <!-- COD_AC Value Display with participation checkbox in same row -->
+                <div class="section">
+                    <label>Comunita</label>
+                    <div class="community-container" style="display: flex;">
+                        <div class="stats-box" ">
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td class="icon-cell">
+                                            <svg width="20" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M10 0C4.486 0 0 4.486 0 10C0 15.514 4.486 20 10 20C15.514 20 20 15.514 20 10C20 4.486 15.514 0 10 0ZM10 18C5.589 18 2 14.411 2 10C2 5.589 5.589 2 10 2C14.411 2 18 5.589 18 10C18 14.411 14.411 18 10 18ZM11 5H9V11H15V9H11V5Z" fill="#303030"/>
+                                            </svg>
+                                        </td>
+                                        <td class="value-cell">
+                                            <span id="cod-ac-value">Caricamento...</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" class="description-cell">Codice Area</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Checkbox for participation placed next to stats-box -->
+                        <div class="checkbox-wrapper" style="display: flex; align-items: center; min-width: 150px;">
+                            <label class="checkbox-option">
+                                <input type="checkbox" id="participate-community" name="community-options" onchange="highlightCheckbox(this)" checked>
+                                <span class="custom-checkbox selected">
+                                    <span class="fill"></span>
+                                </span>
+                                <span class="option-text">Voglio participare</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                            
+                
+
+                <button class="proceed" id="step3Next">Procedi</button>
+            </div>
+        </div>
+
+        <div class="right-panel-3">
+            <img src="https://www.myenergy.store/wp-content/uploads/2025/02/RWKA-Clifden-House-D233-Ryan-W.-Kennihan-Architects-Topophile-1280x1812-1-e1740745088633.jpg" alt="Rendering" style="max-width: 100%; border-radius: 12px;">
+        </div>
+    </div>
+</section>
+
+<!-- Step 4 - Il tuo impianto fotovoltaico (dummy4.html) -->
+<section id="section-step4" class="section-step">
+    <div class="container">
+        <div class="left-side" style="display: flex; flex-direction: column; position: relative;">
+            
+            <!-- Right-aligned image container with margin -->
+            <div class="logo-container dark" style="text-align: right; margin-right: 20px; margin-top: 5px;">
+                <img src="https://www.myenergy.store/wp-content/uploads/2025/02/RWKA-Clifden-House-D233-Ryan-W.-Kennihan-Architects-Topophile-1280x1812-1-e1740745088633.jpg" alt="Immagine impianto" class="side-image" style="max-width: 60%; border-radius: 8px;">
+            </div>
+
+        </div>
+        
+        <div class="right-side">
+            <div class="form-container">
+                <div class="content-inner">
+                    <div class="content-wrapper">
+                        <div class="logo-wrapper" style="margin-bottom: 50px; text-align: right;">
+                            <div class="logo-inner">
+                                <div class="logo-container"> 
+                                    <div class="logo-image">
+                                        <img loading="eager" decoding="async" class="logo" src="logo2.png" alt="Logo MyEnergy" style="max-width: 150px;">
+                                    </div>
+                                </div>
+                            </div>
+                             <div id="main-content" class="content-section" style="padding-top: 20px; padding-bottom: 20px;">
+                            <div class="section-background"></div>
+                            <div class="section-content">
+                                <div class="text-content">
+                                    <p style="text-align: left;">PASSO 4</p>
+                                    <h2 style="text-align: left;">Il tuo impianto fotovoltaico</h2>
+                                </div>
+
+                                <div class="wpb_text_column wpb_content_element ">
+                                    <div class="wpb_wrapper">
+                                        <div style="position: relative;">
+                                            <div>
+                                                <p><strong>Potenza del tuo impianto:</strong><span class="question-button">?<span class="tooltip">Abbiamo usato i dati da te inseriti per ipotizzare la potenza nominale di cui hai bisogno per coprire il tuo fabbisogno energetico.</span></span></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="wpb_raw_code wpb_raw_html wpb_content_element">
+                                    <div class="wpb_wrapper">
+                                        <!-- Container per i tasti di selezione potenza -->
+                                        <div id="buttonsContainer" class="buttonsContainer">
+                                            <button type="button" id="btn1" class="button-common" onclick="handlePowerButton('btn1', 3.32)">3,32 kWp</button>
+                                            <button type="button" id="btn2" class="button-common" onclick="handlePowerButton('btn2', 4.15)">4,15 kWp</button>
+                                            <button type="button" id="btn3" class="button-common" onclick="handlePowerButton('btn3', 4.98)">4,98 kWp</button>
+                                            <button type="button" id="btn4" class="button-common" onclick="handlePowerButton('btn4', 6.23)">6,23 kWp</button>
+                                            <button type="button" id="btn5" class="button-common" onclick="handlePowerButton('btn5', 8.30)">8,30 kWp</button>
+                                            <button type="button" id="btnOpt" class="button-common">
+                                                Ottimizzatori di potenza 
+                                                <span class="question-button">?<span class="tooltip">Gli <b>ottimizzatori di potenza</b> massimizzano la resa di ogni pannello fotovoltaico, riducendo le perdite causate da ombreggiamenti o differenze di produzione.</span></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                
+
+                                <div class="wpb_raw_code wpb_raw_html wpb_content_element" style="margin-top: 20px;">
+                                    <div class="wpb_wrapper">
+                                        <div style="display: flex; width: 100%; align-items: center; justify-content: left; gap: 10px; flex-wrap: nowrap;">
+                                            <div style="flex-shrink: 0; text-align: left; max-width: 250px;">
+                                                <strong>Capacità di batteria:</strong><span class="question-button">?<span class="tooltip">La <b>capacità della batteria di accumulo</b> è la quantità di energia che può immagazzinare, misurata in kilowattora (kWh). Indica quanta energia può fornire per alimentare i carichi quando il fotovoltaico non produce.</span></span>
+                                            </div>
+                                            <div style="position: relative; display: flex; align-items: center;">
+                                                <div id="batteryContainer" style="display: flex; align-items: center; justify-content: center; gap: 5px; padding: 10px 12px; height: 40px; box-sizing: border-box; border: 1px solid #B9B7B7; border-radius: 100px; background-color: transparent; color: #B9B7B7; font-size: 13px; cursor: pointer; transition: 0.3s ease-in-out;">
+                                                    <button id="decreaseBattery" style="border: none; background: none; font-size: 15px; color: inherit; cursor: pointer; padding: 0 5px;">-</button>
+                                                    <span id="batteryCapacity" style="min-width: 90px; text-align: center; font-size: 13px; font-weight: bold;">Senza batteria</span>
+                                                    <button id="increaseBattery" style="border: none; background: none; font-size: 15px; color: inherit; cursor: pointer; padding: 0 5px;">+</button>
+                                                </div>
+                                            </div>
+                                            <button id="backupSystem" style="padding: 10px 12px; height: 40px; box-sizing: border-box; border: 1px solid #B9B7B7; background-color: transparent; color: #B9B7B7; cursor: pointer; font-size: 13px; border-radius: 100px; white-space: nowrap; position: relative; z-index: 1; transition: 0.3s ease-in-out;">
+                                                Sistema di Backup
+                                                <span class="question-button">?<span class="tooltip">Il sistema di backup garantisce l'alimentazione elettrica in caso di blackout, sfruttando l'energia accumulata nella batteria.</span></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="autoconsumo-info" style="display: flex; align-items: center; flex-wrap: wrap; margin: 15px 0; gap: 8px; max-width: 250px;">
+                                    <div style="display: flex; align-items: center; margin-right: 10px;">
+                                        <strong style="margin-right: 6px;">Autoconsumo:</strong>
+                                        <span class="question-button">?
+                                            <span class="tooltip">
+                                                L'autoconsumo fotovoltaico rappresenta la percentuale di energia prodotta dall'impianto solare che viene utilizzata direttamente nell'abitazione o nell'azienda, senza essere immessa in rete.
+                                                <br><br>
+                                                🔹 Un valore basso (&lt;30%) indica che gran parte dell'energia solare non viene sfruttata immediatamente e viene ceduta alla rete.<br>
+                                                🔹 Un valore medio (30-60%) significa che si sta ottimizzando l'uso dell'energia solare in tempo reale.<br>
+                                                🔹 Un valore elevato (&gt;60%) indica un ottimo utilizzo dell'energia prodotta, riducendo al minimo la dipendenza dalla rete elettrica e aumentando il risparmio.<br><br>
+                                                Migliorare l'autoconsumo significa ridurre i costi in bolletta e aumentare l'indipendenza energetica. L'uso di batterie di accumulo, gestione intelligente dei carichi e ottimizzatori di consumo aiuta a massimizzare questa percentuale.
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <span id="progressValue" style="font-weight: bold; font-size: 1.1em; color: #0D2B44;">50%</span>
+                                </div>
+
+                                <!-- Add this after the buttonsContainer div -->
+                                <div class="opzioni-aggiuntive" style="display: flex; flex-direction: row; gap: 10px; flex-wrap: wrap; margin-top: 20px;">
+                                    <!-- Opzione: Wallbox -->
+                                    <div class="opt-add" style="flex: 0.5; min-width: 100px;">
+                                        <input id="wallbox" name="opzioni-aggiuntive" type="checkbox" class="additional-option" data-cost="1500">
+                                        <label for="wallbox">
+                                            <span class="custom-checkbox">
+                                                <span class="fill"></span>
+                                            </span>
+                                            <span class="option-text">Wallbox</span>
+                                            <span class="question-button">?<span class="tooltip">Wallbox consente una ricarica più rapida ed efficiente del tuo veicolo elettrico direttamente da casa.</span></span>
+                                        </label>
+                                    </div>
+                                    
+                                    <!-- Opzione: Linea Vita Definitiva -->
+                                    <div class="opt-add" style="flex: 0.5; min-width: 195px;">
+                                        <input id="linea-vita" name="opzioni-aggiuntive" type="checkbox" class="additional-option" data-cost="2200">
+                                        <label for="linea-vita">
+                                            <span class="custom-checkbox">
+                                                <span class="fill"></span>
+                                            </span>
+                                            <span class="option-text">Linea Vita Definitiva</span>
+                                            <span class="question-button">?<span class="tooltip">Di default installiamo una linea vita provvisoria. La linea vita definitiva garantisce un accesso sicuro al tetto per la manutenzione o la pulizia dei pannelli.</span></span>
+                                        </label>
+                                    </div>
+                                    
+                                    <!-- Opzione: Rete Antipiccioni -->
+                                    <div class="opt-add" style="flex: 0.5; min-width: 170px;">
+                                        <input id="piccioni" name="opzioni-aggiuntive" type="checkbox" class="additional-option" data-cost="320">
+                                        <label for="piccioni">
+                                            <span class="custom-checkbox">
+                                                <span class="fill"></span>
+                                            </span>
+                                            <span class="option-text">Rete Antipiccioni</span>
+                                            <span class="question-button">?<span class="tooltip">La rete antipiccioni protegge i pannelli solari e il tetto impedendo agli uccelli di nidificare sotto i moduli fotovoltaici.</span></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="stats-container">
+                                    <!-- Risparmio -->
+                                    <div class="stats-box">
+                                        <table>
+                                            <tbody><tr>
+                                                <td class="icon-cell">
+                                                    <svg width="58" height="18" viewBox="0 0 58 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M45.3641 37.6328H12.4434C5.9466 37.6328 0.695213 32.3686 0.682373 25.8718V11.7611C0.682373 5.26423 5.9466 0.0128396 12.4434 0H45.3641C51.8609 0 57.1123 5.26423 57.1251 11.7611V25.8718C57.1251 32.3686 51.8609 37.6199 45.3641 37.6328ZM12.4434 4.71212C8.55304 4.71212 5.38166 7.87066 5.38166 11.7739V25.8846C5.38166 29.775 8.5402 32.9464 12.4434 32.9464H45.3641C49.2545 32.9464 52.4259 29.7878 52.4259 25.8846V11.7739C52.4259 7.8835 49.2673 4.71212 45.3641 4.71212H12.4434ZM28.9037 28.2342C23.7037 28.2342 19.4923 24.0228 19.4923 18.8228C19.4923 13.6228 23.7037 9.41141 28.9037 9.41141C34.1038 9.41141 38.3152 13.6228 38.3152 18.8228C38.3152 24.0228 34.1038 28.2342 28.9037 28.2342ZM28.9037 14.1235C26.3102 14.1235 24.2045 16.2292 24.2045 18.8228C24.2045 21.4164 26.3102 23.5221 28.9037 23.5221C31.4973 23.5221 33.603 21.4164 33.603 18.8228C33.603 16.2292 31.4973 14.1235 28.9037 14.1235ZM12.4434 9.42426C11.1466 9.42426 10.0938 10.4771 10.0938 11.7739C10.0938 13.0707 11.1466 14.1235 12.4434 14.1235C13.7402 14.1235 14.7931 13.0707 14.7931 11.7739C14.7931 10.4771 13.7402 9.42426 12.4434 9.42426ZM43.0144 11.7739C43.0144 13.0707 44.0673 14.1235 45.3641 14.1235C46.6609 14.1235 47.7137 13.0707 47.7137 11.7739C47.7137 10.4771 46.6609 9.42426 45.3641 9.42426C44.0673 9.42426 43.0144 10.4771 43.0144 11.7739ZM12.4434 23.5349C11.1466 23.5349 10.0938 24.5878 10.0938 25.8846C10.0938 27.1814 11.1466 28.2342 12.4434 28.2342C13.7402 28.2342 14.7931 27.1814 14.7931 25.8846C14.7931 24.5878 13.7402 23.5349 12.4434 23.5349ZM43.0144 25.8846C43.0144 27.1814 44.0673 28.2342 45.3641 28.2342C46.6609 28.2342 47.7137 27.1814 47.7137 25.8846C47.7137 24.5878 46.6609 23.5349 45.3641 23.5349C44.0673 23.5349 43.0144 24.5878 43.0144 25.8846Z" fill="#303030"></path>
+                                </svg>
+                                
+                                                </td>
+                                                <td class="value-cell">
+                                                    <span id="risparmioTotale">0</span> €
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2" class="description-cell">Risparmio stimato <span class="question-button">?<span class="tooltip">La rete antipiccioni protegge i pannelli solari e il tetto impedendo agli uccelli di nidificare sotto i moduli fotovoltaici.</span></span></td>   
+                                            </tr>
+                                        </tbody></table>
+                                    </div>
+                                
+                                    <!-- Energia prodotta -->
+                                    <div class="stats-box">
+                                        <table>
+                                            <tbody><tr>
+                                                <td class="icon-cell">
+                                                    <svg width="12" height="18" viewBox="0 0 12 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M5.44165 18C5.19638 17.9991 4.95422 17.9449 4.73193 17.841C4.36884 17.679 4.07724 17.3899 3.91183 17.0278C3.74643 16.6657 3.71859 16.2557 3.83355 15.8745L5.00219 12H2.24866C1.89784 12.0004 1.55181 11.9185 1.23828 11.7608C0.92476 11.6032 0.652466 11.3741 0.443225 11.092C0.233984 10.8099 0.0936155 10.4826 0.0333681 10.1364C-0.0268793 9.7902 -0.00532984 9.43465 0.0962898 9.09827L2.36021 1.59828C2.49821 1.13439 2.78266 0.727854 3.17088 0.439679C3.55911 0.151504 4.03015 -0.00276122 4.51333 3.74169e-05H7.27809C7.59234 0.000300773 7.90185 0.0767817 8.18018 0.222944C8.45851 0.369107 8.69737 0.580605 8.87636 0.839364C9.05535 1.09812 9.16914 1.39645 9.20801 1.70885C9.24687 2.02124 9.20966 2.33842 9.09956 2.63328L7.83958 6.00002H9.75388C10.1619 5.99999 10.5623 6.11133 10.9119 6.32208C11.2616 6.53283 11.5473 6.83502 11.7384 7.1962C11.9295 7.55738 12.0188 7.9639 11.9967 8.37209C11.9746 8.78027 11.8418 9.17471 11.6128 9.51302L6.82141 17.238C6.6733 17.4704 6.46941 17.6619 6.22838 17.795C5.98735 17.9281 5.71687 17.9986 5.44165 18ZM4.51333 1.50003C4.35255 1.49988 4.196 1.55158 4.06683 1.64748C3.93766 1.74338 3.84274 1.87839 3.79612 2.03253L1.5322 9.53252C1.49831 9.64458 1.49107 9.76303 1.51108 9.8784C1.53109 9.99376 1.57778 10.1028 1.64742 10.1969C1.71706 10.2909 1.80771 10.3673 1.91211 10.42C2.01652 10.4726 2.13178 10.5 2.24866 10.5H6.01063C6.12751 10.5 6.24277 10.5274 6.34717 10.5801C6.45158 10.6327 6.54223 10.7091 6.61187 10.8032C6.68151 10.8972 6.7282 11.0063 6.74821 11.1216C6.76821 11.237 6.76098 11.3555 6.72708 11.4675L5.26946 16.299C5.26272 16.3168 5.25974 16.3358 5.26071 16.3548C5.26168 16.3737 5.26658 16.3923 5.2751 16.4093C5.28362 16.4263 5.29557 16.4414 5.31019 16.4535C5.32481 16.4656 5.34179 16.4746 5.36005 16.4798C5.3766 16.4904 5.39519 16.4974 5.41462 16.5004C5.43405 16.5034 5.45389 16.5023 5.47286 16.4971C5.49184 16.492 5.50952 16.4829 5.52477 16.4705C5.54003 16.458 5.55252 16.4426 5.56144 16.425L10.3528 8.70002C10.4366 8.58617 10.4865 8.45091 10.4969 8.30984C10.5072 8.16877 10.4775 8.02765 10.4112 7.90277C10.3498 7.78112 10.2557 7.67902 10.1396 7.60788C10.0235 7.53675 9.88996 7.4994 9.75388 7.50002H6.75928C6.63828 7.5001 6.51906 7.47079 6.41184 7.41461C6.30462 7.35843 6.21259 7.27706 6.14363 7.17745C6.07468 7.07785 6.03085 6.96298 6.01589 6.84269C6.00094 6.7224 6.01532 6.60028 6.05779 6.48677L7.69733 2.10678C7.72253 2.03888 7.73098 1.96588 7.72197 1.894C7.71297 1.82212 7.68677 1.75348 7.64562 1.69391C7.60446 1.63434 7.54955 1.58561 7.48557 1.55186C7.42158 1.51811 7.3504 1.50033 7.27809 1.50003H4.51333Z" fill="#303030"></path>
+                                </svg>
+                                
+                                                </td>
+                                                <td class="value-cell">
+                                                    <span id="produzioneLifetime">0</span> kWh
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2" class="description-cell">Energia prodotta</td>
+                                            </tr>
+                                        </tbody></table>
+                                    </div>
+                                
+                                    <!-- CO2 risparmiata -->
+                                    <div class="stats-box">
+                                        <table>
+                                            <tbody><tr>
+                                                <td class="icon-cell">
+                                                <svg width="25" height="18" viewBox="0 0 25 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4.88775 7.58581L5.56964 7.29357L5.48771 6.55624C5.19526 3.92419 7.11731 1.54474 9.76016 1.26158C11.4002 1.08586 13.0252 1.75888 14.0528 3.04333L14.6265 3.7605L15.1787 4.45072L15.9315 3.98746C18.0694 2.67182 20.7008 4.69427 19.9794 7.09871L19.9064 7.34228L19.6223 8.28922L20.5659 8.58411L21.3608 8.8325C23.2515 9.42334 24.3212 11.419 23.7666 13.3206C23.3141 14.8718 21.8922 15.9383 20.2764 15.9383H5.26796C3.81347 15.9383 2.49062 15.0958 1.87554 13.7778C1.39227 12.7422 1.40848 11.5426 1.91955 10.5204L2.1725 10.0145C2.69229 8.97494 3.56375 8.15324 4.63206 7.69539L4.88775 7.58581Z" stroke="#303030" stroke-width="2"></path>
+                                </svg>
+                                
+                                                </td>
+                                                <td class="value-cell">
+                                                    <span id="Co2">0</span> kg
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2" class="description-cell">CO2 risparmiata</td>
+                                            </tr>
+                                        </tbody></table>
+                                    </div>
+                                
+                                    <!-- Alberi Equivalenti -->
+                                    <div class="stats-box">
+                                        <table>
+                                            <tbody><tr>
+                                                <td class="icon-cell">
+                                                <svg width="20" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <g clip-path="url(#clip0_3236_6797)">
+                                <path d="M15.4026 4.2975C15.1401 4.24167 14.9101 3.98833 14.8168 3.65417C14.2168 1.5025 12.236 0 10.0001 0C7.76431 0 5.78348 1.5025 5.18348 3.65417C5.09014 3.98833 4.86015 4.24167 4.59765 4.2975C1.85098 4.89083 -0.0815211 7.36417 0.00264559 10.1792C0.0959789 13.2967 2.80598 15.8333 6.04264 15.8333H9.16681V19.1667C9.16681 19.6275 9.54014 20 10.0001 20C10.4601 20 10.8335 19.6275 10.8335 19.1667V15.8333H13.1535C17.021 15.8333 19.8993 13.455 19.9976 10.1792C20.0826 7.36417 18.1501 4.89083 15.4026 4.2975ZM18.3318 10.1283C18.2601 12.5067 16.131 14.1667 13.1535 14.1667H10.8335V12.845L13.9226 9.75583C14.2485 9.43 14.2485 8.90333 13.9226 8.5775C13.5968 8.25167 13.0701 8.25167 12.7443 8.5775L10.8335 10.4883V7.5C10.8335 7.03917 10.4601 6.66667 10.0001 6.66667C9.54014 6.66667 9.16681 7.03917 9.16681 7.5V10.4883L7.25598 8.5775C6.93014 8.25167 6.40348 8.25167 6.07764 8.5775C5.75181 8.90333 5.75181 9.43 6.07764 9.75583L9.16681 12.845V14.1667H6.04264C3.69765 14.1667 1.73515 12.355 1.66848 10.1283C1.60848 8.1175 2.98765 6.35 4.94848 5.92667C5.82181 5.73833 6.52764 5.04 6.78848 4.10167C7.18848 2.6675 8.50848 1.66667 9.99931 1.66667C11.4901 1.66667 12.8101 2.6675 13.2101 4.10167C13.4718 5.04 14.1768 5.73917 15.0501 5.92667C17.0118 6.35 18.3918 8.1175 18.3318 10.1283Z" fill="#303030"></path>
+                                </g>
+                                <defs>
+                                <clipPath id="clip0_3236_6797">
+                                <rect width="20" height="20" fill="white"></rect>
+                                </clipPath>
+                                </defs>
+                                </svg>
+                                
+                                                </td>
+                                                <td class="value-cell">
+                                                    <span id="alberiEquivalenti">0</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2" class="description-cell">Alberi equivalenti</td>
+                                            </tr>
+                                        </tbody></table>
+                                    </div>
+                                </div>
+                        
+
+                                <div class="stats-container" style="margin-top: 20px;">
+                                    <!-- Moduli -->
+                                    <div class="stats-box">
+                                        <table>
+                                            <tbody>
+                                                <tr>
+                                                    <td class="value-cell">
+                                                        Moduli (n. <span id="moduli-count">0</span>)
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td colspan="2" class="description-cell">Marchio di modulo</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <!-- Inverter -->
+                                    <div class="stats-box">
+                                        <table>
+                                            <tbody>
+                                                <tr>
+                                                    <td class="value-cell">
+                                                        Inverter (n. <span id="inverter-count">1</span>)
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td colspan="2" class="description-cell">Marchio di Inverter</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <!-- Accumulo -->
+                                    <div class="stats-box">
+                                        <table>
+                                            <tbody>
+                                                <tr>
+                                                    <td class="value-cell">
+                                                        Accumulo <span class="accumulo-value">0 kW</span>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td colspan="2" class="description-cell">Marchio Accumulo</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <!-- Prezzo Finale -->
+                                    <div class="stats-box">
+                                        <table>
+                                            <tbody>
+                                                <tr>
+                                                    <td class="value-cell">
+                                                        <span class="cost-result-value">0,00 €</span>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td colspan="2" class="description-cell">Prezzo Finale (IVA incl)</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div id="efficiencyMessage" class="mt-3 text-info" style="font-style: italic; margin-top: 15px; color: #7cc;"></div>
+
+                                <button id="step4Next" style="background-color: transparent; border: 1px solid #0D2B44; color: #0D2B44; width: 100%; max-width: 200px; height: 40px; padding: 10px 20px; box-sizing: border-box; border-radius: 9999px; transition: all 0.3s ease; margin: 30px auto 0; display: block; font-weight: bold;">
+                                    Procedi
+                                </button>
+                            </div>
+                        </div>
+
+                        </div>
+                    </div>
+
+                    <div id="efficiency-message" class="efficiency-message-box" style="display: none;">
+                        <div class="message-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 7H13V13H11V7ZM11 15H13V17H11V15Z" fill="#112B3F"/>
+                            </svg>
+                        </div>
+                        <p>Per quanto riguarda le opzioni di efficientamento energetico, selezionati in fase precedente, verrà contattato dal reparto per approfondire la sua richiesta.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Step 5 - Il tuo preventivo fotovoltaico personalizzato (dummy5.html) -->
+<section id="section-step5" class="section-step">
+    <div class="container">
+        <!-- Left side with form -->
+        <div class="left-side" style="padding: 30px; border-radius: 10px;">
+            <div class="form-container-step5">
+                <h2 style="color: #0D2B44; margin-bottom: 30px;">Il tuo preventivo fotovoltaico personalizzato è pronto</h2>
+                <p style="margin-bottom: 20px;">Inserisci i tuoi dati per ricevere l'offerta completa:</p>
+                
+                <form id="contactForm" style="display: flex; flex-direction: column; gap: 15px;">
+                    <div class="form-group">
+                        <label for="name" style="display: block; margin-bottom: 5px; font-weight: 500;">Nome:</label>
+                        <input type="text" id="name" name="name" required 
+                            style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="surname" style="display: block; margin-bottom: 5px; font-weight: 500;">Cognome:</label>
+                        <input type="text" id="surname" name="surname" required 
+                            style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phone" style="display: block; margin-bottom: 5px; font-weight: 500;">Cellulare (+):</label>
+                        <input type="tel" id="phone" name="phone" required 
+                            style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email" style="display: block; margin-bottom: 5px; font-weight: 500;">Email:</label>
+                        <input type="email" id="email" name="email" required 
+                            style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
+                            <input type="checkbox" id="privacy-consent" required style="margin-top: 3px;">
+                            <span style="font-size: 14px;">Ho letto e accetto la <a href="#" style="color: #0D2B44;">Privacy Policy</a>*</span>
+                        </label>
+                    </div>
+                    
+                    <button type="submit" id="submitContact" 
+                        style="background-color: #0D2B44; color: white; border: none; padding: 14px 20px; 
+                        border-radius: 30px; margin-top: 20px; font-weight: bold; cursor: pointer; 
+                        transition: all 0.3s ease;">
+                        Invia
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Right side with just the logo -->
+        <div class="right-side" style="display: flex; justify-content: center; align-items: center; background-color: #d3d3d3; border-radius: 10px;">
+            <div class="logo-container" style="text-align: center; padding: 30px;">
+                <img src="logo2.png" alt="MyEnergy Solutions Logo" class="logo" style="max-width: 200px;" />
+                <p style="margin-top: 30px; color: #666; font-style: italic;">Il tuo partner per l'energia sostenibile</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading spinner overlay -->
+    <div id="spinnerOverlay" class="spinner-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; flex-direction: column;">
+        <div class="spinner" style="border: 4px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 4px solid white; width: 40px; height: 40px; animation: spin 1s linear infinite;"></div>
+        <p style="color: white; margin-top: 15px;">Invio in corso...</p>
+    </div>
+    
+    <!-- Success modal -->
+    <div id="successModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4);">
+        <div class="modal-content" style="position: relative; background-color: #fff; margin: 15% auto; padding: 30px; border-radius: 8px; max-width: 500px; text-align: center;">
+            <span class="close-modal" style="position: absolute; top: 15px; right: 15px; font-size: 24px; cursor: pointer;">&times;</span>
+            <h3 style="color: #0D2B44;">Richiesta Inviata!</h3>
+            <p>La tua richiesta è stata inviata con successo. Ti contatteremo a breve.</p>
+            <button class="modal-close" style="background-color: #0D2B44; color: white; border: none; padding: 10px 20px; border-radius: 30px; margin-top: 20px; cursor: pointer;">Chiudi</button>
+        </div>
+    </div>
+    
+    <!-- Failure modal -->
+    <div id="failureModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4);">
+        <div class="modal-content" style="position: relative; background-color: #fff; margin: 15% auto; padding: 30px; border-radius: 8px; max-width: 500px; text-align: center;">
+            <span class="close-modal" style="position: absolute; top: 15px; right: 15px; font-size: 24px; cursor: pointer;">&times;</span>
+            <h3 style="color: #e74c3c;">Errore</h3>
+            <p>Si è verificato un errore nell'invio della richiesta. Per favore riprova più tardi.</p>
+            <button class="modal-close" style="background-color: #0D2B44; color: white; border: none; padding: 10px 20px; border-radius: 30px; margin-top: 20px; cursor: pointer;">Chiudi</button>
+        </div>
+    </div>
+</section>
+
+<script>            
+    // General UI Functions
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // Setup for mobile area input functionality
+        const mobileAreaInput = document.getElementById('step-box-area-value-input');
+        const areaValue = document.getElementById('step-box-area-value');
+        const decreaseBtn = document.getElementById('decreaseArea');
+        const increaseBtn = document.getElementById('increaseArea'); // Add this line to define increaseBtn
+        const areaSpan = document.getElementById('step-box-area-value');
+        const step2NextBtn = document.getElementById('step2Next');
+        // Initialize with any existing area value
+        const storedArea = localStorage.getItem('area');
+        if (storedArea) {
+            const areaValue = parseInt(storedArea);
+            if (mobileAreaInput) mobileAreaInput.value = areaValue;
+            if (areaSpan) areaSpan.textContent = areaValue;
+        }
+
+
+        // Initialize with stored value or default
+        let currentArea = parseInt(localStorage.getItem('area') || '16');
+        if (areaValue) areaValue.textContent = currentArea;
+        
+        // Show/hide proceed button based on initial value
+        if (step2NextBtn) {
+            step2NextBtn.style.display = currentArea >= 16 ? 'block' : 'none';
+        }
+        
+        // Add click handler to make value editable
+        if (areaValue) {
+            areaValue.addEventListener('click', function() {
+                // Save current value before editing
+                const currentValue = this.textContent;
+                
+                // Create input element
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.min = '0';
+                input.value = currentValue;
+                input.style.width = '50px';
+                input.style.textAlign = 'center';
+                input.style.border = 'none';
+                input.style.background = 'transparent';
+                input.style.fontSize = this.style.fontSize || '16px';
+                input.style.fontWeight = 'bold';
+                input.style.outline = 'none';
+                
+                // Replace span with input
+                this.textContent = '';
+                this.appendChild(input);
+                input.focus();
+                input.select();
+                
+                // Handle input blur and Enter key
+                const handleChange = function() {
+                    let newValue = parseInt(input.value) || 0;
+                    areaValue.textContent = newValue;
+                    localStorage.setItem('area', newValue);
+                    
+                    // Update global area value
+                    currentArea = newValue;
+                    
+                    // Show/hide proceed button based on value
+                    if (step2NextBtn) {
+                        step2NextBtn.style.display = newValue >= 16 ? 'block' : 'none';
+                    }
+                };
+                
+                input.addEventListener('blur', handleChange);
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleChange();
+                        input.blur();
+                    }
+                });
+            });
+        }
+        
+        // Existing increment/decrement functionality
+        if (decreaseBtn) {
+            decreaseBtn.addEventListener('click', function() {
+                if (currentArea > 0) {
+                    currentArea--;
+                    if (areaValue) areaValue.textContent = currentArea;
+                    localStorage.setItem('area', currentArea);
+                    
+                    // Show/hide proceed button based on value
+                    if (step2NextBtn) {
+                        step2NextBtn.style.display = currentArea >= 16 ? 'block' : 'none';
+                    }
+                }
+            });
+        }
+        
+        if (increaseBtn) {
+            increaseBtn.addEventListener('click', function() {
+                currentArea++;
+                if (areaValue) areaValue.textContent = currentArea;
+                localStorage.setItem('area', currentArea);
+                
+                // Show/hide proceed button based on value
+                if (step2NextBtn) {
+                    step2NextBtn.style.display = currentArea >= 16 ? 'block' : 'none';
+                }
+            });
+        }
+        
+        if (mobileAreaInput) {
+            mobileAreaInput.addEventListener('input', function() {
+                // Get the input value and parse as integer
+                let areaValue = parseInt(this.value) || 0;
+                
+                // Update the non-mobile display too for consistency
+                if (areaSpan) areaSpan.textContent = areaValue;
+                
+                // Store in localStorage
+                localStorage.setItem('area', areaValue);
+                
+                // Show/hide proceed button based on value
+                if (step2NextBtn) {
+                    if (areaValue >= 16) {
+                        console.log('Area is sufficient, showing Proceed button');
+                        step2NextBtn.style.display = 'block';
+                    } else {
+                        console.log('Area is insufficient, hiding Proceed button');
+                        step2NextBtn.style.display = 'none';
+                    }
+                }
+            });
+        }
+        
+        // Energy range slider in Step 3
+        document.getElementById('consumoSlider')?.addEventListener('input', function(e) {
+            document.getElementById('rangeValue').textContent = e.target.value + ' €';
+        });
+
+        // Step 1 interactions
+        document.getElementById('step1Next')?.addEventListener('click', function() {
+            if (localStorage.getItem("address")) {
+                // Hide current section and show step 2
+                document.getElementById('section-step1').style.display = 'none';
+                document.getElementById('section-step2').style.display = 'block';
+                
+                // Initialize the map with stored coordinates
+                const lat = parseFloat(localStorage.getItem("latitude"));
+                const lng = parseFloat(localStorage.getItem("longitude"));
+                console.log(`Initializing map with coordinates: ${lat}, ${lng}`);
+                
+                // Give the DOM time to update before initializing map
+                setTimeout(() => {
+                    if (document.getElementById("map")) {
+                        try {
+                            initMap(lat, lng);
+                            google.maps.event.trigger(map, 'resize');
+                        } catch (error) {
+                            console.error("Error initializing map:", error);
+                        }
+                    } else {
+                        console.error("Map container not found!");
+                    }
+                }, 500);
+
+                // Update address display in Step 2
+                const addressUpdateInput = document.getElementById('address-update');
+                if (addressUpdateInput) {
+                    addressUpdateInput.value = localStorage.getItem("address") || "";
+                }
+            } else {
+                // Show the styled error message
+                document.getElementById('address-error-container').style.display = 'flex';
+            }
+        });
+
+        // Add event listener for the close button
+        document.querySelector('.error-close')?.addEventListener('click', function() {
+            document.getElementById('address-error-container').style.display = 'none';
+        });
+
+        // Toggle button group selection in Step 3
+        window.selectToggle = function(el, group) {
+            const buttons = document.querySelectorAll(`#${group} .btn-toggle`);
+            buttons.forEach(btn => btn.classList.remove('selected'));
+            el.classList.add('selected');
+        };
+
+        // Checkbox style highlight in Step 3
+        window.highlightCheckbox = function(el) {
+            const span = el.nextElementSibling;
+            if (el.checked) {
+                span.classList.add('selected');
+                span.parentElement.classList.add('btn-yellow');
+            } else {
+                span.classList.remove('selected');
+                span.parentElement.classList.remove('btn-yellow');
+            }
+        };
+
+        // Power button toggle in Step 4
+        window.toggleActive = function(buttonId) {
+            const buttons = ['btn1', 'btn2', 'btn3'];
+            buttons.forEach(id => {
+                document.getElementById(id).style.backgroundColor = 'transparent';
+                document.getElementById(id).style.color = '#B9B7B7';
+                document.getElementById(id).style.borderColor = '#B9B7B7';
+            });
+            document.getElementById(buttonId).style.backgroundColor = '#112B3F';
+            document.getElementById(buttonId).style.color = '#fff';
+            document.getElementById(buttonId).style.borderColor = '#112B3F';
+        };
+
+        // Independent toggle button in Step 4
+        window.toggleIndependent = function(buttonId) {
+            const button = document.getElementById(buttonId);
+            if (button) {
+                // Check current state
+                const isActive = button.style.backgroundColor === 'rgb(17, 43, 63)';
+                
+                // Toggle appearance
+                button.style.backgroundColor = isActive ? 'transparent' : '#112B3F';
+                button.style.color = isActive ? '#B9B7B7' : '#fff';
+                button.style.borderColor = isActive ? '#B9B7B7' : '#112B3F';
+                
+                // Update ottimizzatori value (toggle from current state)
+                if (buttonId === 'btn4') {
+                    ottimizzatori = isActive ? 0 : 720;
+                    console.log("Ottimizzatori set to:", ottimizzatori);
+                }
+            }
+        };
+
+        // Hover effect for the step4Next button
+        document.getElementById('step4Next')?.addEventListener('mouseover', function() {
+            this.style.backgroundColor = '#0D2B44';
+            this.style.border = '1px solid #0D2B44';
+            this.style.color = '#FFFFFF';
+        });
+
+        document.getElementById('step4Next')?.addEventListener('mouseout', function() {
+            this.style.backgroundColor = 'transparent';
+            this.style.border = '1px solid #0D2B44';
+            this.style.color = '#0D2B44';
+        });
+
+        // Function to scroll to a specific section
+        window.scrollToSection = function(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth' });
+            }
+        };
+
+               // Add event listener for Step 4 Next button to navigate to Step 5
+        const step4NextBtn = document.getElementById('step4Next');
+        if (step4NextBtn) {
+            step4NextBtn.addEventListener('click', function() {
+                // Hide step 4, show step 5
+                document.getElementById('section-step4').style.display = 'none';
+                document.getElementById('section-step5').style.display = 'block';
+            });
+        }
+
+        
+    });
+</script>
+
+</body>
+</html>
+
