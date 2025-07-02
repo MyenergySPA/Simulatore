@@ -576,9 +576,19 @@
     const areaValue = document.getElementById('step-box-area-value');
     const step2NextBtn = document.getElementById('step2Next');
 
+    // Helper to update either textContent or value depending on element type
+    function displayAreaValue(val) {
+        if (!areaValue) return;
+        if ("value" in areaValue) {
+            areaValue.value = val;
+        } else {
+            areaValue.textContent = val;
+        }
+    }
+
     // Initialize with stored area value or default to 0
     let currentArea = parseInt(localStorage.getItem('area') || '0');
-    if (areaValue) areaValue.textContent = currentArea;
+    displayAreaValue(currentArea);
 
     // Check if the proceed button should be visible on load
     if (step2NextBtn && currentArea >= 16) {
@@ -593,7 +603,7 @@
         currentArea = Math.max(0, newValue);
 
         // Update display and localStorage
-        if (areaValue) areaValue.textContent = currentArea;
+        displayAreaValue(currentArea);
         localStorage.setItem('area', currentArea.toString());
 
         // Show/hide proceed button based on value
@@ -613,6 +623,20 @@
     if (increaseAreaBtn) {
         increaseAreaBtn.addEventListener('click', function () {
             updateAreaValue(currentArea + 1);
+        });
+    }
+
+    // Allow manual editing of the area value if the element is editable or an input
+    if (areaValue) {
+        // Make the element editable in case it's a plain span
+        if (!areaValue.value) {
+            areaValue.setAttribute('contenteditable', 'true');
+        }
+        areaValue.addEventListener('input', function () {
+            const value = parseInt(areaValue.value || areaValue.textContent || '0');
+            if (!isNaN(value)) {
+                updateAreaValue(value);
+            }
         });
     }
 
@@ -742,9 +766,7 @@
 
         // Update all area displays
         document.getElementById('areaValue').textContent = areaInSquareMeters;
-        if (document.getElementById('step-box-area-value')) {
-            document.getElementById('step-box-area-value').textContent = areaInSquareMeters;
-        }
+        displayAreaValue(areaInSquareMeters);
 
         // Store in localStorage
         localStorage.setItem("area", areaInSquareMeters);
@@ -807,9 +829,7 @@
         document.getElementById('area').style.display = 'none';
 
         // Reset area value if the element exists
-        if (document.getElementById('step-box-area-value')) {
-            document.getElementById('step-box-area-value').textContent = '0';
-        }
+        displayAreaValue(0);
     }
 
     // Replace the broken goToStep2 function with this corrected version
@@ -1468,11 +1488,12 @@
         const spinnerOverlay = document.getElementById('calculationSpinnerOverlay') || createCalculationSpinner();
         spinnerOverlay.style.display = 'flex';
 
-        updateEfficiencyOptionsFromDOM();
+        try {
+            updateEfficiencyOptionsFromDOM();
 
 
-        // Save all Step 3 variables
-        saveStep3Variables();
+            // Save all Step 3 variables
+            saveStep3Variables();
 
 
         // Check current values directly instead of just localStorage
@@ -1599,10 +1620,11 @@
             }
         });
 
-        // Hide spinner// Hide spinner and show Step 4 after all calculations are complete
-        spinnerOverlay.style.display = 'none';
-        document.getElementById('section-step4').style.display = 'block';
-
+        } catch (error) {
+            console.error('Error during Step 4 calculations:', error);
+        } finally {
+            spinnerOverlay.style.display = 'none';
+        }
 
         // Proceed to Step 4
         document.getElementById('section-step3').style.display = 'none';
@@ -1660,7 +1682,7 @@
         spinnerOverlay.appendChild(spinner);
         spinnerOverlay.appendChild(message);
         document.body.appendChild(spinnerOverlay);
-
+        spinnerOverlay.style.display = 'none';
         return spinnerOverlay;
     }
 
