@@ -616,6 +616,20 @@
         });
     }
 
+    // Allow manual editing of the area value if the element is editable or an input
+    if (areaValue) {
+        // Make the element editable in case it's a plain span
+        if (!areaValue.value) {
+            areaValue.setAttribute('contenteditable', 'true');
+        }
+        areaValue.addEventListener('input', function () {
+            const value = parseInt(areaValue.value || areaValue.textContent || '0');
+            if (!isNaN(value)) {
+                updateAreaValue(value);
+            }
+        });
+    }
+
     // Add tracking variables to know if user has made selections
     let userSelectedConsumo = false;
     let userSelectedPrevalenza = false;
@@ -1468,11 +1482,12 @@
         const spinnerOverlay = document.getElementById('calculationSpinnerOverlay') || createCalculationSpinner();
         spinnerOverlay.style.display = 'flex';
 
-        updateEfficiencyOptionsFromDOM();
+        try {
+            updateEfficiencyOptionsFromDOM();
 
 
-        // Save all Step 3 variables
-        saveStep3Variables();
+            // Save all Step 3 variables
+            saveStep3Variables();
 
 
         // Check current values directly instead of just localStorage
@@ -1599,10 +1614,11 @@
             }
         });
 
-        // Hide spinner// Hide spinner and show Step 4 after all calculations are complete
-        spinnerOverlay.style.display = 'none';
-        document.getElementById('section-step4').style.display = 'block';
-
+        } catch (error) {
+            console.error('Error during Step 4 calculations:', error);
+        } finally {
+            spinnerOverlay.style.display = 'none';
+        }
 
         // Proceed to Step 4
         document.getElementById('section-step3').style.display = 'none';
