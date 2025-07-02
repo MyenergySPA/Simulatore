@@ -1,6 +1,7 @@
 # Simulatore
 
 Simulatore is a web-based simulation tool developed by Myenergy. It allows users to perform simulations directly in the browser.
+Code is formatted to be copied and pasted directly into wordpress plugins (salient, visual composer, etc)
 
 ## Features
 

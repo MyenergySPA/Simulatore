@@ -246,33 +246,33 @@ button.simulator svg,
 .opzioni-aggiuntive {
   width: 100% !important;
   margin-top: 20px !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
+  white-space: nowrap !important; /* Impedisce il ritorno a capo */
+  overflow: hidden !important; /* Evita scroll orizzontale */
 }
 
 /* Wrapper per allineare le opzioni in linea */
 .opzioni-flex {
   display: flex !important;
-  justify-content: space-evenly !important;
+  justify-content: space-evenly !important; /* Spaziatura uniforme tra gli elementi */
   align-items: center !important;
   width: 100% !important;
-  gap: 5px !important;
-  flex-wrap: nowrap !important;
+  gap: 5px !important; /* **Ridotto per evitare distorsioni nei "?"** */
+  flex-wrap: nowrap !important; /* Impedisce il ritorno a capo */
 }
 
 /* Stile per ogni opzione */
 .opt-add {
   display: flex !important;
   align-items: center !important;
-  flex-grow: 1 !important;
-  justify-content: flex-start !important;
-  padding: 10px 12px !important;
+  flex-grow: 1 !important; /* Distribuisce lo spazio equamente */
+  justify-content: flex-start !important; /* Allinea correttamente i contenuti senza spazi extra */
+  padding: 10px 12px !important; /* **Ridotto leggermente per avvicinare le opzioni** */
   cursor: pointer !important;
   transition: background-color 0.3s ease !important, border-color 0.3s ease !important;
   border: 1px solid transparent !important;
   border-radius: 10px !important;
-  min-width: 13% !important;
-  white-space: nowrap !important;
+  min-width: 13% !important; /* **Diminuito per ridurre la distanza tra le opzioni** */
+  white-space: nowrap !important; /* Blocca il testo su una sola riga */
 }
 
 /* Nasconde i checkbox nativi */
@@ -290,13 +290,13 @@ button.simulator svg,
   box-shadow: inset 0 4px 4px rgba(0, 0, 0, 0.25) !important;
   position: relative !important;
   overflow: hidden !important;
-  margin-right: 4px !important;
+  margin-right: 4px !important; /* **Ridotto per eliminare spazi extra** */
   cursor: pointer !important;
   transition: all 0.3s ease-in-out !important;
 }
 
 /* Effetto di selezione */
-.opt-add input[type="checkbox"]:checked  label .custom-checkbox {
+.opt-add input[type="checkbox"]:checked + label .custom-checkbox {
   background-color: #112B3F !important;
   border-color: #112B3F !important;
   transform: scale(1.1) !important;
@@ -307,11 +307,11 @@ button.simulator svg,
   font-size: 14px !important;
   color: #717171 !important;
   transition: color 0.3s ease-in-out !important;
-  margin-left: 0px !important;
+  margin-left: 0px !important; /* Eliminato qualsiasi spazio extra */
 }
 
 /* Cambio colore al check */
-.opt-add input[type="checkbox"]:checked  label .option-text {
+.opt-add input[type="checkbox"]:checked + label .option-text {
   color: #112B3F !important;
   font-weight: bold !important;
 }
