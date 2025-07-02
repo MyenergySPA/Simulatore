@@ -576,9 +576,19 @@
     const areaValue = document.getElementById('step-box-area-value');
     const step2NextBtn = document.getElementById('step2Next');
 
+    // Helper to update either textContent or value depending on element type
+    function displayAreaValue(val) {
+        if (!areaValue) return;
+        if ("value" in areaValue) {
+            areaValue.value = val;
+        } else {
+            areaValue.textContent = val;
+        }
+    }
+
     // Initialize with stored area value or default to 0
     let currentArea = parseInt(localStorage.getItem('area') || '0');
-    if (areaValue) areaValue.textContent = currentArea;
+    displayAreaValue(currentArea);
 
     // Check if the proceed button should be visible on load
     if (step2NextBtn && currentArea >= 16) {
@@ -593,7 +603,7 @@
         currentArea = Math.max(0, newValue);
 
         // Update display and localStorage
-        if (areaValue) areaValue.textContent = currentArea;
+        displayAreaValue(currentArea);
         localStorage.setItem('area', currentArea.toString());
 
         // Show/hide proceed button based on value
@@ -756,9 +766,7 @@
 
         // Update all area displays
         document.getElementById('areaValue').textContent = areaInSquareMeters;
-        if (document.getElementById('step-box-area-value')) {
-            document.getElementById('step-box-area-value').textContent = areaInSquareMeters;
-        }
+        displayAreaValue(areaInSquareMeters);
 
         // Store in localStorage
         localStorage.setItem("area", areaInSquareMeters);
@@ -821,9 +829,7 @@
         document.getElementById('area').style.display = 'none';
 
         // Reset area value if the element exists
-        if (document.getElementById('step-box-area-value')) {
-            document.getElementById('step-box-area-value').textContent = '0';
-        }
+        displayAreaValue(0);
     }
 
     // Replace the broken goToStep2 function with this corrected version
@@ -1676,7 +1682,7 @@
         spinnerOverlay.appendChild(spinner);
         spinnerOverlay.appendChild(message);
         document.body.appendChild(spinnerOverlay);
-
+        spinnerOverlay.style.display = 'none';
         return spinnerOverlay;
     }
 
