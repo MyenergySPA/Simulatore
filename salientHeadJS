@@ -571,74 +571,17 @@
         }
     });
 
-    const decreaseAreaBtn = document.getElementById('decreaseArea');
-    const increaseAreaBtn = document.getElementById('increaseArea');
-    const areaValue = document.getElementById('step-box-area-value');
-    const step2NextBtn = document.getElementById('step2Next');
-
     // Helper to update either textContent or value depending on element type
     function displayAreaValue(val) {
-        if (!areaValue) return;
-        if ("value" in areaValue) {
-            areaValue.value = val;
+        const areaEl = document.getElementById('step-box-area-value');
+        if (!areaEl) return;
+        if ("value" in areaEl) {
+            areaEl.value = val;
         } else {
-            areaValue.textContent = val;
+            areaEl.textContent = val;
         }
     }
 
-    // Initialize with stored area value or default to 0
-    let currentArea = parseInt(localStorage.getItem('area') || '0');
-    displayAreaValue(currentArea);
-
-    // Check if the proceed button should be visible on load
-    if (step2NextBtn && currentArea >= 16) {
-        step2NextBtn.style.display = 'block';
-    } else if (step2NextBtn) {
-        step2NextBtn.style.display = 'none';
-    }
-
-    // Update function to keep code DRY
-    function updateAreaValue(newValue) {
-        // Ensure we don't go below 0
-        currentArea = Math.max(0, newValue);
-
-        // Update display and localStorage
-        displayAreaValue(currentArea);
-        localStorage.setItem('area', currentArea.toString());
-
-        // Show/hide proceed button based on value
-        if (step2NextBtn) {
-            step2NextBtn.style.display = currentArea >= 16 ? 'block' : 'none';
-        }
-    }
-
-    // Decrease area button
-    if (decreaseAreaBtn) {
-        decreaseAreaBtn.addEventListener('click', function () {
-            updateAreaValue(currentArea - 1);
-        });
-    }
-
-    // Increase area button
-    if (increaseAreaBtn) {
-        increaseAreaBtn.addEventListener('click', function () {
-            updateAreaValue(currentArea + 1);
-        });
-    }
-
-    // Allow manual editing of the area value if the element is editable or an input
-    if (areaValue) {
-        // Make the element editable in case it's a plain span
-        if (!areaValue.value) {
-            areaValue.setAttribute('contenteditable', 'true');
-        }
-        areaValue.addEventListener('input', function () {
-            const value = parseInt(areaValue.value || areaValue.textContent || '0');
-            if (!isNaN(value)) {
-                updateAreaValue(value);
-            }
-        });
-    }
 
     // Add tracking variables to know if user has made selections
     let userSelectedConsumo = false;
@@ -1218,6 +1161,45 @@
         const addressElement = document.getElementById('selected-address');
         if (addressElement && localStorage.getItem('address')) {
             addressElement.textContent = localStorage.getItem('address');
+        }
+
+        // Setup manual area controls now that DOM is ready
+        const decreaseAreaBtn = document.getElementById('decreaseArea');
+        const increaseAreaBtn = document.getElementById('increaseArea');
+        const areaValue = document.getElementById('step-box-area-value');
+        let currentArea = parseInt(localStorage.getItem('area') || '0');
+        displayAreaValue(currentArea);
+        if (step2NextBtn) {
+            step2NextBtn.style.display = currentArea >= 16 ? 'block' : 'none';
+        }
+
+        function updateAreaValue(newValue) {
+            currentArea = Math.max(0, newValue);
+            displayAreaValue(currentArea);
+            localStorage.setItem('area', currentArea.toString());
+            if (step2NextBtn) {
+                step2NextBtn.style.display = currentArea >= 16 ? 'block' : 'none';
+            }
+        }
+
+        if (decreaseAreaBtn) {
+            decreaseAreaBtn.addEventListener('click', () => updateAreaValue(currentArea - 1));
+        }
+
+        if (increaseAreaBtn) {
+            increaseAreaBtn.addEventListener('click', () => updateAreaValue(currentArea + 1));
+        }
+
+        if (areaValue) {
+            if (!areaValue.value) {
+                areaValue.setAttribute('contenteditable', 'true');
+            }
+            areaValue.addEventListener('input', () => {
+                const value = parseInt(areaValue.value || areaValue.textContent || '0');
+                if (!isNaN(value)) {
+                    updateAreaValue(value);
+                }
+            });
         }
 
         // Add click event for Sistema di Backup button
