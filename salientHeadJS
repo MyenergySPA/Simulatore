@@ -26,7 +26,7 @@
     }
 </script>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCBWaYSaDUQDQ_muGXLgW6Zo22Oc_M3asA&libraries=places,drawing,geometry&callback=initMapCallback" async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=KEYHERE&libraries=places,drawing,geometry&callback=initMapCallback" async defer></script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -409,7 +409,7 @@
             latitude, longitude, azimuth, inclinazione
         });
 
-        const apiUrl = `https://developer.nrel.gov/api/pvwatts/v8.json?api_key=q8FeOId3P75qkcCNJLYVWccY2jHBF23XooQpl9Mx&azimuth=${azimuth}&tilt=${inclinazione}&system_capacity=1&dataset=nsrdb&albedo=0.3&bifaciality=0.7&format=json&module_type=0&losses=14&array_type=1&use_wf_albedo=1&lat=${latitude}&lon=${longitude}`;
+        const apiUrl = `https://developer.nrel.gov/api/pvwatts/v8.json?api_key=KEYHERE&azimuth=${azimuth}&tilt=${inclinazione}&system_capacity=1&dataset=nsrdb&albedo=0.3&bifaciality=0.7&format=json&module_type=0&losses=14&array_type=1&use_wf_albedo=1&lat=${latitude}&lon=${longitude}`;
 
         try {
             const response = await fetch(apiUrl);
