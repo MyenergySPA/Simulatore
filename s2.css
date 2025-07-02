@@ -1,0 +1,317 @@
+/* Nascondi mantenendo lo spazio occupato */
+.hidden {
+  visibility: hidden;
+}
+
+/* Stile base dei pulsanti “Procedi” */
+.proceed {
+  display: inline-block;
+  white-space: nowrap;
+  background-color: transparent;
+  border: 1px solid #ccc;
+  color: #666;
+  width: 100px;
+  height: 40px;
+  padding: 10px 20px 10px 13px;
+  box-sizing: border-box;
+  border-radius: 999px !important;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  float: right;
+  margin-top: 20px;
+}
+.proceed:hover {
+  background-color: #EF8B27;
+  border-color: #EF8B27;
+  color: #fff;
+}
+
+/* Contenitore mappa */
+#map-container {
+  position: relative !important;
+  width: 100%;
+  height: 64vh;
+  overflow: hidden;
+  background-color: #eeeeee;
+  border-radius: 8px;
+}
+/* La mappa */
+#map {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 0;
+}
+/* Forza Google Maps a riempire il contenitore */
+#map div.gm-style,
+#map div.gm-style > div,
+.gm-style,
+.gm-style > div {
+  width: 100% !important;
+  height: 100% !important;
+  background: transparent !important;
+}
+.gm-style img {
+  max-width: none !important;
+  background: none !important;
+}
+
+/* Overlay full-screen per “Disegna” e wrapper per i controlli */
+#mapOverlay,
+.map-controls {
+  position: absolute !important;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000 !important;
+  pointer-events: none;
+}
+/* Posizionamento in basso dei controlli ridisegna/area */
+.map-controls {
+  top: auto;
+  bottom: 20px;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+/* Solo i button intercettano i click */
+#mapOverlay button,
+.map-controls button {
+  pointer-events: all !important;
+  cursor: pointer;
+}
+/* Nascondi l’indicazione area sopra la mappa */
+.map-controls #area {
+  display: none;
+}
+
+/* Stile dei bottoni mappa */
+#startDesign {
+  background-color: #fff;
+  color: #1d4e73;
+  border: none;
+  border-radius: 100px !important;
+  padding: 15px 30px;
+  font-size: 18px;
+  font-weight: bold;
+  width: 80%;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+#startDesign:hover {
+  background-color: #ef8b27;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+}
+
+#redoButton {
+  background-color: #fff;
+  color: #0D2B44;
+  border: 1px solid #0D2B44;
+  border-radius: 50px;
+  padding: 8px 16px;
+  font-size: 14px;
+  transition: background 0.3s ease;
+}
+#redoButton:hover {
+  background-color: #f5f5f5;
+}
+
+/* Stile del pulsante di conferma passo 2 */
+#step2Next {
+  background-color: #fff;
+  color: #0D2B44;
+  border: none;
+  border-radius: 50px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+#step2Next:hover {
+  background-color: #0A1F33;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* Pannello destro */
+.right-side {
+  background-color: #0D2B44;
+  color: #fff;
+  align-items: flex-start;
+  overflow-y: auto;
+  max-height: 100vh;
+}
+
+/* Stili per l’area display */
+.area-display {
+  background-color: #fff;
+  padding: 8px 16px;
+  border-radius: 50px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  font-size: 14px;
+  display: none;
+}
+
+/* Contenitore area */
+#areaContainer {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 5px !important;
+  padding: 6px 12px !important;
+  border: 1px solid #B9B7B7 !important;
+  border-radius: 50px !important;
+  background-color: transparent !important;
+  color: #555 !important;
+  font-size: 13px !important;
+  margin: 10px 0 !important;
+  max-width: 300px !important;
+  height: 44px !important;
+  white-space: nowrap !important;
+}
+
+.question-button {
+  font-family: 'DM Sans' !important;
+  margin-left: 8px !important;
+  cursor: pointer !important;
+  display: inline-block !important;
+  width: 18px !important;
+  height: 18px !important;
+  border: 1px solid #B9B7B7 !important;
+  border-radius: 100px !important;
+  text-align: center !important;
+  line-height: 18px !important;
+  font-size: 12px !important;
+  padding: 0 !important;
+  color: #B9B7B7 !important;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
+}
+.question-button:hover {
+  border-color: #EF8B27 !important;
+  color: #EF8B27 !important;
+}
+
+button.simulator,
+.button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: transparent !important;
+  border: 1px solid #112B3F !important;
+  border-radius: 10px !important;
+  height: 45px !important;
+  padding: 10px !important;
+  font-size: 14px !important;
+  color: #112B3F !important;
+  cursor: pointer !important;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
+  margin-right: 10px !important;
+}
+button.simulator.selected,
+.button.selected {
+  background-color: #112B3F !important;
+  color: white !important;
+}
+button.simulator.selected svg path,
+.button.selected svg path {
+  stroke: white !important;
+}
+button.simulator:hover,
+.button:hover {
+  background-color: #112B3F !important;
+  color: white !important;
+  border-color: #112B3F !important;
+}
+button.simulator:hover svg path,
+.button:hover svg path,
+button.simulator.selected svg path,
+.button.selected svg path {
+  stroke: white !important;
+}
+button.simulator svg,
+.button svg {
+  width: 20px !important;
+  height: auto !important;
+  fill: none !important;
+  stroke: #112B3F !important;
+  transition: stroke 0.3s ease !important;
+  margin-right: 10px !important;
+}
+
+/* Contenitore principale */
+.opzioni-aggiuntive {
+  width: 100% !important;
+  margin-top: 20px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+}
+
+/* Wrapper per allineare le opzioni in linea */
+.opzioni-flex {
+  display: flex !important;
+  justify-content: space-evenly !important;
+  align-items: center !important;
+  width: 100% !important;
+  gap: 5px !important;
+  flex-wrap: nowrap !important;
+}
+
+/* Stile per ogni opzione */
+.opt-add {
+  display: flex !important;
+  align-items: center !important;
+  flex-grow: 1 !important;
+  justify-content: flex-start !important;
+  padding: 10px 12px !important;
+  cursor: pointer !important;
+  transition: background-color 0.3s ease !important, border-color 0.3s ease !important;
+  border: 1px solid transparent !important;
+  border-radius: 10px !important;
+  min-width: 13% !important;
+  white-space: nowrap !important;
+}
+
+/* Nasconde i checkbox nativi */
+.opt-add input[type="checkbox"] {
+  display: none !important;
+}
+
+/* Stile per la checkbox personalizzata */
+.opt-add .custom-checkbox {
+  width: 18px !important;
+  height: 18px !important;
+  border: 2px solid #D9D9D9 !important;
+  border-radius: 2px !important;
+  background-color: #D9D9D9 !important;
+  box-shadow: inset 0 4px 4px rgba(0, 0, 0, 0.25) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  margin-right: 4px !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+/* Effetto di selezione */
+.opt-add input[type="checkbox"]:checked  label .custom-checkbox {
+  background-color: #112B3F !important;
+  border-color: #112B3F !important;
+  transform: scale(1.1) !important;
+}
+
+/* Testo opzione */
+.opt-add .option-text {
+  font-size: 14px !important;
+  color: #717171 !important;
+  transition: color 0.3s ease-in-out !important;
+  margin-left: 0px !important;
+}
+
+/* Cambio colore al check */
+.opt-add input[type="checkbox"]:checked  label .option-text {
+  color: #112B3F !important;
+  font-weight: bold !important;
+}
