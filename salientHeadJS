@@ -571,50 +571,17 @@
         }
     });
 
-    const decreaseAreaBtn = document.getElementById('decreaseArea');
-    const increaseAreaBtn = document.getElementById('increaseArea');
-    const areaValue = document.getElementById('step-box-area-value');
-    const step2NextBtn = document.getElementById('step2Next');
-
-    // Initialize with stored area value or default to 0
-    let currentArea = parseInt(localStorage.getItem('area') || '0');
-    if (areaValue) areaValue.textContent = currentArea;
-
-    // Check if the proceed button should be visible on load
-    if (step2NextBtn && currentArea >= 16) {
-        step2NextBtn.style.display = 'block';
-    } else if (step2NextBtn) {
-        step2NextBtn.style.display = 'none';
-    }
-
-    // Update function to keep code DRY
-    function updateAreaValue(newValue) {
-        // Ensure we don't go below 0
-        currentArea = Math.max(0, newValue);
-
-        // Update display and localStorage
-        if (areaValue) areaValue.textContent = currentArea;
-        localStorage.setItem('area', currentArea.toString());
-
-        // Show/hide proceed button based on value
-        if (step2NextBtn) {
-            step2NextBtn.style.display = currentArea >= 16 ? 'block' : 'none';
+    // Helper to update either textContent or value depending on element type
+    function displayAreaValue(val) {
+        const areaEl = document.getElementById('step-box-area-value');
+        if (!areaEl) return;
+        if ("value" in areaEl) {
+            areaEl.value = val;
+        } else {
+            areaEl.textContent = val;
         }
     }
 
-    // Decrease area button
-    if (decreaseAreaBtn) {
-        decreaseAreaBtn.addEventListener('click', function () {
-            updateAreaValue(currentArea - 1);
-        });
-    }
-
-    // Increase area button
-    if (increaseAreaBtn) {
-        increaseAreaBtn.addEventListener('click', function () {
-            updateAreaValue(currentArea + 1);
-        });
-    }
 
     // Add tracking variables to know if user has made selections
     let userSelectedConsumo = false;
@@ -742,9 +709,7 @@
 
         // Update all area displays
         document.getElementById('areaValue').textContent = areaInSquareMeters;
-        if (document.getElementById('step-box-area-value')) {
-            document.getElementById('step-box-area-value').textContent = areaInSquareMeters;
-        }
+        displayAreaValue(areaInSquareMeters);
 
         // Store in localStorage
         localStorage.setItem("area", areaInSquareMeters);
@@ -807,9 +772,7 @@
         document.getElementById('area').style.display = 'none';
 
         // Reset area value if the element exists
-        if (document.getElementById('step-box-area-value')) {
-            document.getElementById('step-box-area-value').textContent = '0';
-        }
+        displayAreaValue(0);
     }
 
     // Replace the broken goToStep2 function with this corrected version
@@ -1200,6 +1163,45 @@
             addressElement.textContent = localStorage.getItem('address');
         }
 
+        // Setup manual area controls now that DOM is ready
+        const decreaseAreaBtn = document.getElementById('decreaseArea');
+        const increaseAreaBtn = document.getElementById('increaseArea');
+        const areaValue = document.getElementById('step-box-area-value');
+        let currentArea = parseInt(localStorage.getItem('area') || '0');
+        displayAreaValue(currentArea);
+        if (step2NextBtn) {
+            step2NextBtn.style.display = currentArea >= 16 ? 'block' : 'none';
+        }
+
+        function updateAreaValue(newValue) {
+            currentArea = Math.max(0, newValue);
+            displayAreaValue(currentArea);
+            localStorage.setItem('area', currentArea.toString());
+            if (step2NextBtn) {
+                step2NextBtn.style.display = currentArea >= 16 ? 'block' : 'none';
+            }
+        }
+
+        if (decreaseAreaBtn) {
+            decreaseAreaBtn.addEventListener('click', () => updateAreaValue(currentArea - 1));
+        }
+
+        if (increaseAreaBtn) {
+            increaseAreaBtn.addEventListener('click', () => updateAreaValue(currentArea + 1));
+        }
+
+        if (areaValue) {
+            if (!areaValue.value) {
+                areaValue.setAttribute('contenteditable', 'true');
+            }
+            areaValue.addEventListener('input', () => {
+                const value = parseInt(areaValue.value || areaValue.textContent || '0');
+                if (!isNaN(value)) {
+                    updateAreaValue(value);
+                }
+            });
+        }
+
         // Add click event for Sistema di Backup button
         const backupButton = document.getElementById('backupSystem');
         if (backupButton) {
@@ -1468,11 +1470,12 @@
         const spinnerOverlay = document.getElementById('calculationSpinnerOverlay') || createCalculationSpinner();
         spinnerOverlay.style.display = 'flex';
 
-        updateEfficiencyOptionsFromDOM();
+        try {
+            updateEfficiencyOptionsFromDOM();
 
 
-        // Save all Step 3 variables
-        saveStep3Variables();
+            // Save all Step 3 variables
+            saveStep3Variables();
 
 
         // Check current values directly instead of just localStorage
@@ -1599,10 +1602,11 @@
             }
         });
 
-        // Hide spinner// Hide spinner and show Step 4 after all calculations are complete
-        spinnerOverlay.style.display = 'none';
-        document.getElementById('section-step4').style.display = 'block';
-
+        } catch (error) {
+            console.error('Error during Step 4 calculations:', error);
+        } finally {
+            spinnerOverlay.style.display = 'none';
+        }
 
         // Proceed to Step 4
         document.getElementById('section-step3').style.display = 'none';
@@ -1660,7 +1664,7 @@
         spinnerOverlay.appendChild(spinner);
         spinnerOverlay.appendChild(message);
         document.body.appendChild(spinnerOverlay);
-
+        spinnerOverlay.style.display = 'none';
         return spinnerOverlay;
     }
 
