@@ -576,9 +576,19 @@
     const areaValue = document.getElementById('step-box-area-value');
     const step2NextBtn = document.getElementById('step2Next');
 
+    // Helper to update either textContent or value depending on element type
+    function displayAreaValue(val) {
+        if (!areaValue) return;
+        if ("value" in areaValue) {
+            areaValue.value = val;
+        } else {
+            areaValue.textContent = val;
+        }
+    }
+
     // Initialize with stored area value or default to 0
     let currentArea = parseInt(localStorage.getItem('area') || '0');
-    if (areaValue) areaValue.textContent = currentArea;
+    displayAreaValue(currentArea);
 
     // Check if the proceed button should be visible on load
     if (step2NextBtn && currentArea >= 16) {
@@ -593,7 +603,7 @@
         currentArea = Math.max(0, newValue);
 
         // Update display and localStorage
-        if (areaValue) areaValue.textContent = currentArea;
+        displayAreaValue(currentArea);
         localStorage.setItem('area', currentArea.toString());
 
         // Show/hide proceed button based on value
@@ -613,6 +623,13 @@
     if (increaseAreaBtn) {
         increaseAreaBtn.addEventListener('click', function () {
             updateAreaValue(currentArea + 1);
+        });
+    }
+
+    // Manual area input
+    if (areaValue && 'value' in areaValue) {
+        areaValue.addEventListener('input', function () {
+            updateAreaValue(parseInt(this.value));
         });
     }
 
@@ -742,9 +759,7 @@
 
         // Update all area displays
         document.getElementById('areaValue').textContent = areaInSquareMeters;
-        if (document.getElementById('step-box-area-value')) {
-            document.getElementById('step-box-area-value').textContent = areaInSquareMeters;
-        }
+        displayAreaValue(areaInSquareMeters);
 
         // Store in localStorage
         localStorage.setItem("area", areaInSquareMeters);
@@ -807,9 +822,7 @@
         document.getElementById('area').style.display = 'none';
 
         // Reset area value if the element exists
-        if (document.getElementById('step-box-area-value')) {
-            document.getElementById('step-box-area-value').textContent = '0';
-        }
+        displayAreaValue(0);
     }
 
     // Replace the broken goToStep2 function with this corrected version
@@ -1468,6 +1481,8 @@
         const spinnerOverlay = document.getElementById('calculationSpinnerOverlay') || createCalculationSpinner();
         spinnerOverlay.style.display = 'flex';
 
+        try {
+
         updateEfficiencyOptionsFromDOM();
 
 
@@ -1599,14 +1614,13 @@
             }
         });
 
-        // Hide spinner// Hide spinner and show Step 4 after all calculations are complete
+        // Hide spinner and show Step 4 after all calculations are complete
+    } catch (error) {
+        console.error('Error during step 4 calculations:', error);
+    } finally {
         spinnerOverlay.style.display = 'none';
         document.getElementById('section-step4').style.display = 'block';
-
-
-        // Proceed to Step 4
         document.getElementById('section-step3').style.display = 'none';
-        document.getElementById('section-step4').style.display = 'block';
     }
 
     // Create a calculation spinner if it doesn't exist
@@ -1660,7 +1674,7 @@
         spinnerOverlay.appendChild(spinner);
         spinnerOverlay.appendChild(message);
         document.body.appendChild(spinnerOverlay);
-
+        spinnerOverlay.style.display = 'none';
         return spinnerOverlay;
     }
 
@@ -3038,8 +3052,12 @@
         window.goToStep4 = async function () {
 
             hideAllSteps();
+            const spinnerOverlay = document.getElementById('calculationSpinnerOverlay') || createCalculationSpinner();
+            spinnerOverlay.style.display = 'flex';
             document.getElementById('section-step4').style.display = 'block';
             window.scrollTo(0, 0);
+
+            try {
 
             // Save all Step 3 variables
             saveStep3Variables();
@@ -3137,6 +3155,11 @@
                     userSelectedSuperficie
                 }
             });
+        } catch (error) {
+            console.error('Error during step 4 calculations:', error);
+        } finally {
+            spinnerOverlay.style.display = 'none';
+        }
         };
 
         window.goToStep5 = function () {
